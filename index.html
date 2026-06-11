@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIL Supervisor - DC Motor Control Studio</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #1e2023;
+            --card-bg: #2b2e32;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent-blue: #3498db;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --border-color: #3f4347;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* --- TOP BAR --- */
+        header {
+            background-color: var(--card-bg);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicators {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.8rem;
+        }
+
+        .status-light {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+        }
+
+        .connect-btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- GENERIC CARD STYLE --- */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .card-content {
+            padding: 15px;
+            flex: 1;
+        }
+
+        /* --- LEFT SIDEBAR --- */
+        .left-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 6px 10px;
+            background-color: #383c41;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            box-sizing: border-box;
+            font-size: 0.85rem;
+        }
+
+        .setpoint-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-green { background-color: var(--accent-green); color: white; }
+        .btn-red { background-color: var(--accent-red); color: white; }
+        .btn-yellow { background-color: #f1c40f; color: #2c3e50; }
+        .btn-blue { background-color: var(--accent-blue); color: white; }
+
+        .param-display-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Gaya Khusus Kolom Input Interaktif */
+        .param-input-box {
+            width: 100%;
+            background-color: #1e2023;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: #2ecc71; /* Hijau simulator cerah */
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 6px 0;
+            box-sizing: border-box;
+        }
+        
+        .param-input-box:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+        }
+
+        .toggle-group {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 0.8rem;
+        }
+
+        /* --- CENTER AREA --- */
+        .center-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chart-card {
+            flex: 1;
+        }
+
+        .chart-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .value-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .value-item h3 {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .value-item p {
+            margin: 5px 0 0 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        /* --- RIGHT SIDEBAR --- */
+        .right-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-weight: bold;
+        }
+
+        .log-textarea {
+            width: 100%;
+            height: 100%;
+            background-color: #222;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 0.75rem;
+            padding: 10px;
+            border: none;
+            box-sizing: border-box;
+            resize: none;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><img src="https://img.icons8.com/fluency/24/000000/dashboard.png"/> HIL Supervisor <span style="color:var(--text-muted);">| DC Motor Control Studio</span></h1>
+    <div class="status-indicators">
+        <span>Simulasi Motor (Tanpa Hardware) <div class="status-light" style="background-color:var(--accent-green); display:inline-block; margin-left:5px;"></div></span>
+        <span>Simulasi Internal <div class="status-light" style="background-color:#f1c40f; display:inline-block; margin-left:5px;"></div></span>
+        <button id="btnConnect" class="connect-btn">Hubungkan Serial</button>
+    </div>
+</header>
+
+<div class="main-container">
+    
+    <div class="left-sidebar">
+        
+        <div class="card">
+            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/settings.png"/> Panel Operasi</h2></div>
+            <div class="card-content">
+                <div class="form-group">
+                    <label>Mode Kendali</label>
+                    <select>
+                        <option>Kendali Kecepatan (RPM)</option>
+                        <option>Kendali Posisi (ADC)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Set Point (Target)</label>
+                    <div class="setpoint-group">
+                        <input type="number" id="inputSetpoint" value="100">
+                        <button id="btnSendSetpoint" class="btn btn-blue" style="width: auto; flex:0;">SET</button>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-green">START</button>
+                    <button class="btn btn-red">STOP</button>
+                    <button class="btn btn-yellow">RESET</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/mind-map.png"/> Robust PID</h2></div>
+            <div class="card-content">
+                <div class="param-display-grid">
+                    <div class="value-item">
+                        <h3>Kp</h3>
+                        <input type="number" id="inputKp" class="param-input-box" value="0" step="0.001">
+                    </div>
+                    <div class="value-item">
+                        <h3>Ki</h3>
+                        <input type="number" id="inputKi" class="param-input-box" value="0" step="0.001">
+                    </div>
+                    <div class="value-item">
+                        <h3>Kd</h3>
+                        <input type="number" id="inputKd" class="param-input-box" value="0" step="0.001">
+                    </div>
+                </div>
+                
+                <button id="btnSendPID" class="btn btn-blue" style="width:100%; margin-top:12px;">Kirim Parameter PID</button>
+                
+                <div class="toggle-group">
+                    <label><input type="checkbox" checked> Anti-Integral Windup</label>
+                    <label><input type="checkbox" checked> Anti-Derivative Kick</label>
+                    <label><input type="checkbox"> Trajectory Planning (S-Curve)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/automatic.png"/> Auto Tuning</h2></div>
+            <div class="card-content">
+                <div class="form-group">
+                    <label>Mode</label>
+                    <select id="selectMethod">
+                        <option value="ZN_PID">ZN Mode 1 (Open Loop Step)</option>
+                        <option value="ZN_PI">Ziegler-Nichols (PI)</option>
+                        <option value="CC_PID">Cohen-Coon (PID)</option>
+                        <option value="CC_PI">Cohen-Coon (PI)</option>
+                    </select>
+                </div>
+                
+                <button id="btnTune" class="btn btn-green" style="width:100%; margin-bottom:10px;">Hitung Otomatis</button>
+                
+                <label>Model Identifikasi (FOPDT)</label>
+                <div class="grid-3" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:5px;">
+                    <input type="number" id="paramK" placeholder="K" value="1.0">
+                    <input type="number" id="paramTau" placeholder="T" value="1.0">
+                    <input type="number" id="paramL" placeholder="L" value="0.2">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="center-area">
+        <div class="card chart-card">
+            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/line-chart.png"/> Real-Time Response</h2></div>
+            <div class="chart-container">
+                <canvas id="realtimeChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="value-bar">
+            <div class="value-item"><h3>Setpoint (SP)</h3><p id="instantSP">0.0</p></div>
+            <div class="value-item"><h3>Process Variable (PV)</h3><p id="instantPV">0.0</p></div>
+            <div class="value-item"><h3>Control Effort (PWM)</h3><p id="instantPWM">0 (STOP)</p></div>
+        </div>
+    </div>
+
+    <div class="right-sidebar">
+        
+        <div class="card">
+            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/checked.png"/> Performance Matrix</h2></div>
+            <div class="card-content">
+                <div class="metric-item"><span class="metric-label">Overshoot (Mp)</span><span class="metric-value">---</span></div>
+                <div class="metric-item"><span class="metric-label">Rise Time (tr)</span><span class="metric-value">---</span></div>
+                <div class="metric-item"><span class="metric-label">Settling Time (ts)</span><span class="metric-value">---</span></div>
+                <div class="metric-item"><span class="metric-label">Steady State Error (Ess)</span><span class="metric-value">---</span></div>
+            </div>
+        </div>
+
+        <div class="card" style="flex:1;">
+            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/log.png"/> HIL -> MCU State</h2></div>
+            <div class="card-content" style="padding:0;">
+                <textarea id="serialLog" class="log-textarea" readonly></textarea>
+            </div>
+        </div>
+        
+    </div>
+
+</div>
+
+<script>
+    let port, writer, reader, keepReading = true;
+
+    // Chart.js Setup
+    const ctx = document.getElementById('realtimeChart').getContext('2d');
+    const maxDataPoints = 200;
+    const realtimeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array(maxDataPoints).fill(''),
+            datasets: [
+                { label: 'Set Point (SP)', data: Array(maxDataPoints).fill(null), borderColor: '#e74c3c', borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'Process Variable (PV)', data: Array(maxDataPoints).fill(null), borderColor: '#2ecc71', borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, animation: false,
+            elements: { line: { tension: 0 } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#3f4347' }, ticks: { color: '#a0a0a0' } },
+                x: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+            },
+            plugins: { legend: { labels: { color: '#e0e0e0' } } }
+        }
+    });
+
+    const btnConnect = document.getElementById('btnConnect');
+    const serialLog = document.getElementById('serialLog');
+    const instantSP = document.getElementById('instantSP');
+    const instantPV = document.getElementById('instantPV');
+    const instantPWM = document.getElementById('instantPWM');
+
+    // Koneksi Serial via Web Serial API
+    btnConnect.addEventListener('click', async () => {
+        if ('serial' in navigator) {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+                btnConnect.textContent = "Terhubung";
+                btnConnect.style.backgroundColor = "#2ecc71";
+                const textEncoder = new TextEncoderStream();
+                textEncoder.readable.pipeTo(port.writable);
+                writer = textEncoder.writable.getWriter();
+                readSerialData();
+                logToTextarea("System READY. Kp, Ki, Kd diatur ke 0.");
+            } catch (err) { alert("Gagal membuka port serial: " + err); }
+        } else { alert("Browser tidak mendukung Web Serial API!"); }
+    });
+
+    async function readSerialData() {
+        const textDecoder = new TextDecoderStream();
+        port.readable.pipeTo(textDecoder.writable);
+        reader = textDecoder.readable.getReader();
+        let buffer = "";
+        while (keepReading) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            if (value) {
+                buffer += value;
+                let lines = buffer.split("\n");
+                buffer = lines.pop();
+                for (let line of lines) {
+                    if (line.trim().length > 0) parseAndPlot(line.trim());
+                }
+            }
+        }
+    }
+
+    function logToTextarea(text) {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        serialLog.value += `[${timeStr}] ${text}\n`;
+        serialLog.scrollTop = serialLog.scrollHeight;
+    }
+
+    function parseAndPlot(line) {
+        const dataArr = line.split(",");
+        if (dataArr.length >= 4) {
+            const sp = parseFloat(dataArr[0]);
+            const raw = parseFloat(dataArr[1]);
+            const filtered = parseFloat(dataArr[2]);
+            const pwm = parseInt(dataArr[3]);
+
+            if (!isNaN(sp) && !isNaN(raw) && !isNaN(filtered)) {
+                realtimeChart.data.datasets[0].data.push(sp);
+                realtimeChart.data.datasets[0].data.shift();
+                realtimeChart.data.datasets[1].data.push(filtered);
+                realtimeChart.data.datasets[1].data.shift();
+                realtimeChart.update();
+
+                instantSP.textContent = sp.toFixed(1);
+                instantPV.textContent = filtered.toFixed(1);
+                const pwmDir = pwm > 0 ? "(FWD)" : (pwm < 0 ? "(REV)" : "(STOP)");
+                instantPWM.textContent = `${pwm} ${pwmDir}`;
+            }
+        }
+    }
+
+    async function sendSerial(command) {
+        if (writer) { await writer.write(command + "\n"); } 
+        else { alert("Serial tidak terhubung!"); }
+    }
+
+    // Event Setpoint
+    document.getElementById('btnSendSetpoint').addEventListener('click', () => {
+        const spVal = document.getElementById('inputSetpoint').value;
+        sendSerial("S=" + spVal);
+        logToTextarea(`Setpoint baru: ${spVal}`);
+    });
+
+    // Event Kirim Parameter PID (Manual dari Isian Praktikan)
+    document.getElementById('btnSendPID').addEventListener('click', () => {
+        const kp = parseFloat(document.getElementById('inputKp').value);
+        const ki = parseFloat(document.getElementById('inputKi').value);
+        const kd = parseFloat(document.getElementById('inputKd').value);
+
+        if (isNaN(kp) || isNaN(ki) || isNaN(kd)) {
+            alert("Harap masukkan parameter PID berupa angka yang valid!");
+            return;
+        }
+
+        logToTextarea(`Mengirim PID -> Kp: ${kp}, Ki: ${ki}, Kd: ${kd}`);
+        sendSerial(`P=${kp.toFixed(3)},I=${ki.toFixed(3)},D=${kd.toFixed(3)}`);
+    });
+
+    // Event Kalkulasi Otomatis (Auto Tuning)
+    document.getElementById('btnTune').addEventListener('click', () => {
+        logToTextarea("Memulai kalkulasi parameter otomatis...");
+        const K = parseFloat(document.getElementById('paramK').value);
+        const tau = parseFloat(document.getElementById('paramTau').value);
+        const L = parseFloat(document.getElementById('paramL').value);
+        const method = document.getElementById('selectMethod').value;
+
+        if (K === 0 || L === 0) { alert("Nilai K dan L tidak boleh nol!"); return; }
+
+        let Kp = 0, Ki = 0, Kd = 0, Ti = 0, Td = 0;
+
+        if (method === "ZN_PI") { Kp = (0.9 * tau) / (K * L); Ki = Kp / (L / 0.3); } 
+        else if (method === "ZN_PID") { Kp = (1.2 * tau) / (K * L); Ti = 2 * L; Td = 0.5 * L; Ki = Kp / Ti; Kd = Kp * Td; } 
+        else if (method === "CC_PI") { Kp = (tau/(K*L))*(0.9+L/(12*tau)); Ki = Kp / (L*((30+3*(L/tau))/(9+20*(L/tau)))); } 
+        else if (method === "CC_PID") { Kp = (tau/(K*L))*(4/3+L/(4*tau)); Ki = Kp / (L*((32+6*(L/tau))/(13+8*(L/tau)))); Kd = Kp * (L*(4/(11+2*(L/tau)))); }
+
+        // Memperbarui kotak input interaktif dengan hasil hitungan rumus otomatis
+        document.getElementById('inputKp').value = Kp.toFixed(3);
+        document.getElementById('inputKi').value = Ki.toFixed(3);
+        document.getElementById('inputKd').value = Kd.toFixed(3);
+
+        logToTextarea(`Auto-Tuning Selesai (${method}). Nilai diperbarui di atas.`);
+        sendSerial(`P=${Kp.toFixed(3)},I=${Ki.toFixed(3)},D=${Kd.toFixed(3)}`);
+    });
+</script>
+
+</body>
+</html>
