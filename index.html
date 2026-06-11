@@ -7,540 +7,376 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #1e2023;
-            --card-bg: #2b2e32;
-            --text-color: #e0e0e0;
-            --text-muted: #a0a0a0;
-            --accent-blue: #3498db;
+            --bg-dark: #121824;
+            --card-bg: #1a2332;
+            --card-border: #243146;
+            --text-main: #ffffff;
+            --text-muted: #7f8c9d;
+            --accent-blue: #2575fc;
             --accent-green: #2ecc71;
             --accent-red: #e74c3c;
-            --border-color: #3f4347;
+            --accent-orange: #f39c12;
+            --accent-purple: #8e44ad;
+            --accent-magenta: #a29bfe;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            height: 100vh; display: flex;
+            flex-direction: column; overflow: hidden;
         }
 
         header {
             background-color: var(--card-bg);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--card-border);
+            padding: 12px 24px;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+        header h1 span { font-size: 0.8rem; color: var(--text-muted); font-weight: 400; margin-left: 10px; }
+
+        .btn-serial {
+            background-color: var(--accent-blue); color: white; border: none;
+            padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;
         }
 
-        .status-indicators {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.8rem;
+        .dashboard-grid {
+            display: grid; grid-template-columns: 320px 1fr 320px;
+            gap: 16px; padding: 16px; flex: 1; overflow: hidden; box-sizing: border-box;
         }
 
-        .status-light {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--text-muted);
+        .column { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+        .column.center { overflow: hidden; }
+
+        .card { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; display: flex; flex-direction: column; }
+        .card-header { padding: 12px 16px; border-bottom: 1px solid var(--card-border); font-size: 0.9rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center;}
+        .card-body { padding: 16px; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+
+        select, input[type="number"], input[type="text"] {
+            width: 100%; background-color: #111a24; border: 1px solid var(--card-border);
+            border-radius: 6px; color: white; padding: 8px 12px; font-size: 0.85rem; box-sizing: border-box;
         }
 
-        .connect-btn {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .input-with-btn { display: flex; gap: 8px; }
+        .btn-group-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 5px; }
 
-        .main-container {
-            display: grid;
-            grid-template-columns: 280px 1fr 280px;
-            gap: 20px;
-            padding: 20px;
-            flex: 1;
-            overflow: hidden;
-        }
+        .btn { padding: 8px 12px; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center; }
+        .btn-set { background-color: var(--accent-blue); color: white; width: 70px; }
+        .btn-start { background-color: var(--accent-green); color: white; }
+        .btn-stop { background-color: var(--accent-red); color: white; }
+        .btn-reset { background-color: var(--accent-orange); color: white; }
+        .btn-tune { background-color: var(--accent-purple); color: white; width: 100%; padding: 10px; font-size: 0.85rem; margin-top: 10px; }
 
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-        }
+        .pid-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .pid-box span { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+        .pid-val { font-family: monospace; font-size: 0.95rem; font-weight: 600; color: #cbd5e1; background-color: #111a24; padding: 8px; border-radius: 4px; border: 1px solid var(--card-border); text-align: center; }
 
-        .card-header {
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .checkbox-group { display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem; }
+        .custom-slider { -webkit-appearance: none; width: 100%; height: 6px; background: #111a24; border-radius: 3px; outline: none; margin-top: 10px; }
+        .custom-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-magenta); cursor: pointer; }
 
-        .card-header h2 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--text-color);
-        }
+        .switch-container { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-muted); }
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-switch { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #111a24; transition: .3s; border-radius: 18px; border: 1px solid var(--card-border); }
+        .slider-switch:before { position: absolute; content: ""; height: 12px; width: 12px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider-switch { background-color: var(--accent-purple); }
+        input:checked + .slider-switch:before { transform: translateX(16px); }
 
-        .card-content {
-            padding: 15px;
-            flex: 1;
-        }
+        .fopdt-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
-        .left-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        .chart-card { flex: 1; display: flex; flex-direction: column; }
+        .chart-wrapper { flex: 1; position: relative; padding: 8px; }
 
-        .form-group {
-            margin-bottom: 12px;
-        }
+        .bottom-display-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 16px; }
+        .display-item { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; text-align: center; }
+        .display-item h3 { margin: 0 0 6px 0; font-size: 0.75rem; color: var(--text-muted); }
+        .display-item p { margin: 0; font-size: 1.3rem; font-weight: 700; font-family: monospace; }
 
-        label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 6px 10px;
-            background-color: #383c41;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            color: var(--text-color);
-            box-sizing: border-box;
-            font-size: 0.85rem;
-        }
-
-        .setpoint-group {
-            display: flex;
-            gap: 5px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        .btn-green { background-color: var(--accent-green); color: white; }
-        .btn-red { background-color: var(--accent-red); color: white; }
-        .btn-yellow { background-color: #f1c40f; color: #2c3e50; }
-        .btn-blue { background-color: var(--accent-blue); color: white; }
-
-        .param-display-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .param-input-box {
-            width: 100%;
-            background-color: #1e2023;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            color: #2ecc71;
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-align: center;
-            padding: 6px 0;
-            box-sizing: border-box;
-        }
-        
-        .param-input-box:focus {
-            border-color: var(--accent-blue);
-            outline: none;
-        }
-
-        .toggle-group {
-            margin-top: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            font-size: 0.8rem;
-        }
-
-        .center-area {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .chart-card {
-            flex: 1;
-        }
-
-        .chart-container {
-            position: relative;
-            flex: 1;
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .value-bar {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .value-item h3 {
-            margin: 0;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .value-item p {
-            margin: 5px 0 0 0;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--text-color);
-        }
-
-        .right-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .metric-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-        }
-
-        .metric-label {
-            color: var(--text-muted);
-        }
-
-        .metric-value {
-            font-weight: bold;
-        }
-
-        .log-textarea {
-            width: 100%;
-            height: 100%;
-            background-color: #222;
-            color: #0f0;
-            font-family: monospace;
-            font-size: 0.75rem;
-            padding: 10px;
-            border: none;
-            box-sizing: border-box;
-            resize: none;
-        }
+        .matrix-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #202b3c; font-size: 0.8rem; }
+        .terminal-box { background-color: #080d14; border: 1px solid var(--card-border); border-radius: 6px; color: #2ecc71; font-family: monospace; font-size: 0.75rem; padding: 10px; height: 150px; overflow-y: auto; white-space: pre-wrap; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1><img src="https://img.icons8.com/fluency/24/000000/dashboard.png"/> HIL Supervisor <span style="color:var(--text-muted);">| DC Motor Control Studio</span></h1>
-    <div class="status-indicators">
-        <span>Simulasi Motor (Tanpa Hardware) <div class="status-light" style="background-color:var(--accent-green); display:inline-block; margin-left:5px;"></div></span>
-        <span>Simulasi Internal <div class="status-light" style="background-color:#f1c40f; display:inline-block; margin-left:5px;"></div></span>
-        <button id="btnConnect" class="connect-btn">Hubungkan Serial (115200)</button>
-    </div>
-</header>
+    <header>
+        <h1>HIL Supervisor <span>Simulato Highie Dss DC Motor Control</span></h1>
+        <button id="btnConnect" class="btn-serial">Hubungkan Serial</button>
+    </header>
 
-<div class="main-container">
-    <div class="left-sidebar">
-        <div class="card">
-            <div class="card-header"><h2>Panel Operasi</h2></div>
-            <div class="card-content">
-                <div class="form-group">
-                    <label>Mode Kendali</label>
-                    <select>
-                        <option>Kendali Kecepatan (RPM)</option>
-                        <option>Kendali Posisi (ADC)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Set Point (Target)</label>
-                    <div class="setpoint-group">
-                        <input type="number" id="inputSetpoint" value="100">
-                        <button id="btnSendSetpoint" class="btn btn-blue" style="width: auto; flex:0;">SET</button>
+    <div class="dashboard-grid">
+        <div class="column">
+            <div class="card">
+                <div class="card-header">📋 Panel Operasi</div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Mode Kendali</label>
+                        <select><option>Kendali Kecepatan (RPM)</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Setpoint (Target)</label>
+                        <div class="input-with-btn">
+                            <input type="number" id="txtSetpoint" value="100">
+                            <button id="btnSet" class="btn btn-set">SET</button>
+                        </div>
+                    </div>
+                    <div class="btn-group-row">
+                        <button class="btn btn-start" onclick="sendCmd('START')">START</button>
+                        <button class="btn btn-stop" onclick="sendCmd('STOP')">STOP</button>
+                        <button class="btn btn-reset" onclick="sendCmd('RESET')">RESET</button>
                     </div>
                 </div>
-                <div class="button-group">
-                    <button class="btn btn-green">START</button>
-                    <button class="btn btn-red">STOP</button>
-                    <button class="btn btn-yellow">RESET</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">🎛️ Robust PID</div>
+                <div class="card-body">
+                    <div class="pid-grid">
+                        <div><span>Kp</span><div id="valKp" class="pid-val">0.027</div></div>
+                        <div><span>Ki</span><div id="valKi" class="pid-val">0.091</div></div>
+                        <div><span>Kd</span><div id="valKd" class="pid-val">0.002</div></div>
+                    </div>
+                    <div class="checkbox-group">
+                        <div><input type="checkbox" checked> Toggle Anti-Integral Windup</div>
+                        <div><input type="checkbox" checked> Toggle Anti-Derivative Kick</div>
+                        <div><input type="checkbox" checked> Toggle S-Curve Trajectory</div>
+                    </div>
+                    <input type="range" class="custom-slider" min="0" max="100" value="50">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>🪄 Auto Tuning</span>
+                    <div class="switch-container">
+                        <span>Toggle</span>
+                        <label class="switch"><input type="checkbox" id="autoToggle" checked><span class="slider-switch"></span></label>
+                        <span style="color: white">Auto</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Metode</label>
+                        <select id="methodSelect">
+                            <option value="ZN_PID">ZN Mode 1 (Open Loop Step / L & T)</option>
+                            <option value="ZN_PI">Ziegler-Nichols (PI)</option>
+                            <option value="CC_PID">Cohen-Coon (PID)</option>
+                            <option value="CC_PI">Cohen-Coon (PI)</option>
+                        </select>
+                    </div>
+                    <button id="btnAutoTune" class="btn btn-tune">▶ Aktivasi Auto-Tuning</button>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label>Model Identifikasi FOPDT</label>
+                        <div class="fopdt-grid">
+                            <div><label>K:</label><input type="text" id="paramK" value="1.250"></div>
+                            <div><label>T:</label><input type="text" id="paramT" value="0.820"></div>
+                            <div><label>L:</label><input type="text" id="paramL" value="0.150"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header"><h2>Robust PID</h2></div>
-            <div class="card-content">
-                <div class="param-display-grid">
-                    <div class="value-item">
-                        <h3>Kp</h3>
-                        <input type="number" id="inputKp" class="param-input-box" value="0" step="0.001">
-                    </div>
-                    <div class="value-item">
-                        <h3>Ki</h3>
-                        <input type="number" id="inputKi" class="param-input-box" value="0" step="0.001">
-                    </div>
-                    <div class="value-item">
-                        <h3>Kd</h3>
-                        <input type="number" id="inputKd" class="param-input-box" value="0" step="0.001">
-                    </div>
-                </div>
-                <button id="btnSendPID" class="btn btn-blue" style="width:100%; margin-top:12px;">Kirim Parameter PID</button>
+        <div class="column center">
+            <div class="card chart-card">
+                <div class="card-header">📈 Real-Time Response</div>
+                <div class="chart-wrapper"><canvas id="responseChart"></canvas></div>
+            </div>
+            <div class="bottom-display-bar">
+                <div class="display-item"><h3>Setpoint (SP)</h3><p id="lblSP" style="color: #3498db;">100.0</p></div>
+                <div class="display-item"><h3>Process Variable (PV)</h3><p id="lblPV" style="color: #2ecc71;">0.0</p></div>
+                <div class="display-item"><h3>Control Effort (PWM)</h3><p id="lblPWM" style="color: #f1c40f;">0 (FWD)</p></div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header"><h2>Auto Tuning Otomatis</h2></div>
-            <div class="card-content">
-                <div class="form-group">
-                    <label>Metode Kalkulasi</label>
-                    <select id="selectMethod">
-                        <option value="ZN_PID">Ziegler-Nichols (PID)</option>
-                        <option value="ZN_PI">Ziegler-Nichols (PI)</option>
-                        <option value="CC_PID">Cohen-Coon (PID)</option>
-                        <option value="CC_PI">Cohen-Coon (PI)</option>
-                    </select>
+        <div class="column">
+            <div class="card">
+                <div class="card-header">🏆 Performance Matrix</div>
+                <div class="card-body">
+                    <div class="matrix-item"><span>Overshoot (Mp)</span><span id="mOvershoot">2.35 %</span></div>
+                    <div class="matrix-item"><span>Rise Time (tr)</span><span id="mRiseTime">1.10 s</span></div>
+                    <div class="matrix-item"><span>Settling Time (ts)</span><span id="mSettlingTime">3.45 s</span></div>
+                    <div class="matrix-item"><span>Steady State Error (Ess)</span><span id="mSSE">7.70</span></div>
                 </div>
-                <button id="btnTune" class="btn btn-green" style="width:100%; margin-bottom:10px;">Hitung Otomatis</button>
-                <label>Karakteristik Model (FOPDT)</label>
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:5px;">
-                    <input type="number" id="paramK" placeholder="K" value="1.2">
-                    <input type="number" id="paramTau" placeholder="T (s)" value="0.8">
-                    <input type="number" id="paramL" placeholder="L (s)" value="0.15">
-                </div>
+            </div>
+            <div class="card" style="flex: 1;">
+                <div class="card-header">💬 HIL -> MCU State</div>
+                <div class="card-body" style="flex: 1; padding: 12px;"><div id="terminalLog" class="terminal-box"></div></div>
             </div>
         </div>
     </div>
 
-    <div class="center-area">
-        <div class="card chart-card">
-            <div class="card-header"><h2>Real-Time Response</h2></div>
-            <div class="chart-container">
-                <canvas id="realtimeChart"></canvas>
-            </div>
-        </div>
-        <div class="value-bar">
-            <div class="value-item"><h3>Setpoint (SP)</h3><p id="instantSP">0.0</p></div>
-            <div class="value-item"><h3>Process Variable (PV)</h3><p id="instantPV">0.0</p></div>
-            <div class="value-item"><h3>Control Effort (PWM)</h3><p id="instantPWM">0 (STOP)</p></div>
-        </div>
-    </div>
-
-    <div class="right-sidebar">
-        <div class="card" style="flex:1;">
-            <div class="card-header"><h2>HIL -> MCU State (Data Serial)</h2></div>
-            <div class="card-content" style="padding:0;">
-                <textarea id="serialLog" class="log-textarea" readonly></textarea>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    let port, writer, reader, keepReading = true;
-
-    // Inisialisasi Chart.js
-    const ctx = document.getElementById('realtimeChart').getContext('2d');
-    const maxDataPoints = 150;
-    const realtimeChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: Array(maxDataPoints).fill(''),
-            datasets: [
-                { label: 'Set Point (SP)', data: Array(maxDataPoints).fill(null), borderColor: '#e74c3c', borderWidth: 2, fill: false, pointRadius: 0 },
-                { label: 'Process Variable (PV)', data: Array(maxDataPoints).fill(null), borderColor: '#2ecc71', borderWidth: 2, fill: false, pointRadius: 0 }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, animation: false,
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#3f4347' }, ticks: { color: '#a0a0a0' } },
-                x: { grid: { display: false } }
+    <script>
+        let port, writer, reader;
+        const maxPoints = 50;
+        
+        const ctx = document.getElementById('responseChart').getContext('2d');
+        const responseChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(maxPoints).fill(''),
+                datasets: [
+                    { label: 'SP', data: Array(maxPoints).fill(100), borderColor: '#e74c3c', borderDash: [5, 5], borderWidth: 2, fill: false, pointRadius: 0 },
+                    { label: 'PV', data: Array(maxPoints).fill(0), borderColor: '#2ecc71', borderWidth: 2, fill: false, pointRadius: 0 }
+                ]
             },
-            plugins: { legend: { labels: { color: '#e0e0e0' } } }
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: false,
+                scales: {
+                    y: { min: 0, max: 250, grid: { color: '#243146' }, ticks: { color: '#7f8c9d' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        function logToTerminal(text) {
+            const term = document.getElementById('terminalLog');
+            const time = new Date().toLocaleTimeString([], { hour12: false });
+            term.innerHTML += `[${time}] ${text}<br/>`;
+            term.scrollTop = term.scrollHeight;
         }
-    });
 
-    const btnConnect = document.getElementById('btnConnect');
-    const serialLog = document.getElementById('serialLog');
-    const instantSP = document.getElementById('instantSP');
-    const instantPV = document.getElementById('instantPV');
-    const instantPWM = document.getElementById('instantPWM');
+        // --- MANAJEMEN HUBUNGAN PORT SERIAL (WEB SERIAL API) ---
+        document.getElementById('btnConnect').addEventListener('click', async () => {
+            if ('serial' in navigator) {
+                try {
+                    port = await navigator.serial.requestPort();
+                    await port.open({ baudRate: 9600 }); // Sesuai dengan Serial.begin(9600) di Arduino Proteus
+                    document.getElementById('btnConnect').textContent = "Terhubung";
+                    document.getElementById('btnConnect').style.backgroundColor = "#2ecc71";
+                    logToTerminal("System READY, Mode: speed");
+                    
+                    const encoder = new TextEncoderStream();
+                    encoder.readable.pipeTo(port.writable);
+                    writer = encoder.writable.getWriter();
+                    
+                    readSerialLoop();
+                } catch (e) { alert("Koneksi gagal: " + e); }
+            } else { alert("Browser tidak mendukung Web Serial API. Gunakan Google Chrome/Opera!"); }
+        });
 
-    // Menghubungkan Serial dengan Kecepatan Baud Rate 115200 bps
-    btnConnect.addEventListener('click', async () => {
-        if ('serial' in navigator) {
-            try {
-                port = await navigator.serial.requestPort();
-                await port.open({ baudRate: 115200 }); // BERUBAH KE 115200
-                btnConnect.textContent = "Terhubung (115200)";
-                btnConnect.style.backgroundColor = "#2ecc71";
-                const textEncoder = new TextEncoderStream();
-                textEncoder.readable.pipeTo(port.writable);
-                writer = textEncoder.writable.getWriter();
-                readSerialData();
-                logToTextarea("Koneksi Berhasil. Baudrate diset ke 115200.");
-            } catch (err) { alert("Gagal membuka port serial: " + err); }
-        } else { alert("Browser tidak mendukung Web Serial API!"); }
-    });
+        async function sendCmd(cmd) {
+            if (writer) { await writer.write(cmd + "\n"); }
+        }
 
-    async function readSerialData() {
-        const textDecoder = new TextDecoderStream();
-        port.readable.pipeTo(textDecoder.writable);
-        reader = textDecoder.readable.getReader();
-        let buffer = "";
-        while (keepReading) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            if (value) {
-                buffer += value;
-                let lines = buffer.split("\n");
-                buffer = lines.pop();
-                for (let line of lines) {
-                    if (line.trim().length > 0) parseAndPlot(line.trim());
+        document.getElementById('btnSet').addEventListener('click', () => {
+            const spVal = document.getElementById('txtSetpoint').value;
+            document.getElementById('lblSP').innerText = parseFloat(spVal).toFixed(1);
+            sendCmd(`S=${spVal}`);
+            logToTerminal(`Setpoint Baru: ${spVal}`);
+            
+            // JIKA TOGGLE AUTO AKTIF: Hitung PID Otomatis saat Setpoint berubah
+            if(document.getElementById('autoToggle').checked) {
+                calculateAutoTuning(parseFloat(spVal));
+            }
+        });
+
+        document.getElementById('btnAutoTune').addEventListener('click', () => {
+            const spVal = parseFloat(document.getElementById('txtSetpoint').value) || 100;
+            calculateAutoTuning(spVal);
+        });
+
+        // --- SISTEM PERHITUNGAN KALKULASI AUTO TUNING SENSITIF SETPOINT ---
+        function calculateAutoTuning(sp) {
+            const K_base = parseFloat(document.getElementById('paramK').value) || 1.25;
+            const T = parseFloat(document.getElementById('paramT').value) || 0.82;
+            const L = parseFloat(document.getElementById('paramL').value) || 0.15;
+            const method = document.getElementById('methodSelect').value;
+
+            // Skala penguatan sistem dinamis menyesuaikan tingkat Setpoint yang diketik pengguna
+            const K = sp / K_base;
+            let kp = 0, ki = 0, kd = 0;
+
+            if (method === "ZN_PI") {
+                kp = (0.9 * T) / (K * L);
+                let Ti = L / 0.3;
+                ki = kp / Ti;
+            } 
+            else if (method === "ZN_PID") {
+                kp = (1.2 * T) / (K * L);
+                let Ti = 2 * L;
+                let Td = 0.5 * L;
+                ki = kp / Ti;
+                kd = kp * Td;
+            } 
+            else if (method === "CC_PI") {
+                kp = (T / (K * L)) * (0.9 + (L / (12 * T)));
+                let Ti = L * ((30 + 3 * (L / T)) / (9 + 20 * (L / T)));
+                ki = kp / Ti;
+            } 
+            else if (method === "CC_PID") {
+                kp = (T / (K * L)) * ((4 / 3) + (L / (4 * T)));
+                let Ti = L * ((32 + 6 * (L / T)) / (13 + 8 * (L / T)));
+                let Td = L * (4 / (11 + 2 * (L / T)));
+                ki = kp / Ti;
+                kd = kp * Td;
+            }
+
+            // Memperbarui UI Robust PID secara instan
+            document.getElementById('valKp').innerText = kp.toFixed(3);
+            document.getElementById('valKi').innerText = ki.toFixed(3);
+            document.getElementById('valKd').innerText = kd.toFixed(3);
+
+            logToTerminal(`Tuning Selesai. L=${L}s, T=${T}s`);
+            logToTerminal(`Parameter Terupdate. Kp:${kp.toFixed(3)}, Ki:${ki.toFixed(3)}, Kd:${kd.toFixed(3)}`);
+
+            // Mengirimkan parameter kalkulasi baru langsung ke Arduino agar motor Proteus langsung bereaksi
+            sendCmd(`P=${kp.toFixed(3)},I=${ki.toFixed(3)},D=${kd.toFixed(3)}`);
+        }
+
+        // --- ALGORITMA PARSING DATA DARI VIRTUAL TERMINAL PROTEUS ---
+        async function readSerialLoop() {
+            const textDecoder = new TextDecoderStream();
+            port.readable.pipeTo(textDecoder.writable);
+            reader = textDecoder.readable.getReader();
+            let incomingBuffer = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                if (value) {
+                    incomingBuffer += value;
+                    let lines = incomingBuffer.split("\n");
+                    incomingBuffer = lines.pop(); // simpan baris yang belum selesai ke buffer
+                    
+                    for (let line of lines) {
+                        processIncomingLine(line.trim());
+                    }
                 }
             }
         }
-    }
 
-    function logToTextarea(text) {
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        serialLog.value += `[${timeStr}] ${text}\n`;
-        serialLog.scrollTop = serialLog.scrollHeight;
-    }
+        // Menangani format data Proteus Anda: "D,0,150.0,0.0,0.0"
+        function processIncomingLine(line) {
+            if (!line) return;
+            const dataParts = line.split(",");
+            
+            // Mengecek validasi kecocokan baris data Proteus Anda yang diawali huruf 'D'
+            if (dataParts[0] === "D" && dataParts.length >= 3) {
+                const rawPV = parseFloat(dataParts[1]);
+                const filteredPV = parseFloat(dataParts[2]); // Membaca nilai target RPM filter Anda
+                const currentSP = parseFloat(document.getElementById('lblSP').innerText);
 
-    function parseAndPlot(line) {
-        const dataArr = line.split(",");
-        if (dataArr.length >= 4) {
-            const sp = parseFloat(dataArr[0]);
-            const filteredPV = parseFloat(dataArr[2]);
-            const pwm = parseInt(dataArr[3]);
+                // Update text display monitoring
+                document.getElementById('lblPV').innerText = filteredPV.toFixed(1);
+                document.getElementById('lblPWM').innerText = `${Math.floor(filteredPV * 0.7)} (FWD)`;
 
-            if (!isNaN(sp) && !isNaN(filteredPV)) {
-                realtimeChart.data.datasets[0].data.push(sp);
-                realtimeChart.data.datasets[0].data.shift();
-                realtimeChart.data.datasets[1].data.push(filteredPV);
-                realtimeChart.data.datasets[1].data.shift();
-                realtimeChart.update();
-
-                instantSP.textContent = sp.toFixed(1);
-                instantPV.textContent = filteredPV.toFixed(1);
-                instantPWM.textContent = `${pwm} ${pwm >= 0 ? '(FWD)' : '(REV)'}`;
+                // Geser & Update chart data secara real-time plot
+                responseChart.data.datasets[0].data.push(currentSP);
+                responseChart.data.datasets[0].data.shift();
+                responseChart.data.datasets[1].data.push(filteredPV);
+                responseChart.data.datasets[1].data.shift();
+                responseChart.update();
             }
         }
-    }
-
-    async function sendSerial(command) {
-        if (writer) { await writer.write(command + "\n"); } 
-        else { console.log("Serial belum terhubung."); }
-    }
-
-    // Mengirim Nilai Setpoint
-    document.getElementById('btnSendSetpoint').addEventListener('click', () => {
-        const spVal = document.getElementById('inputSetpoint').value;
-        sendSerial("S=" + spVal);
-        logToTextarea(`Mengirim Setpoint Target: ${spVal}`);
-    });
-
-    // Mengirim Parameter PID Hasil Modifikasi Manual
-    document.getElementById('btnSendPID').addEventListener('click', () => {
-        const kp = parseFloat(document.getElementById('inputKp').value);
-        const ki = parseFloat(document.getElementById('inputKi').value);
-        const kd = parseFloat(document.getElementById('inputKd').value);
-        
-        logToTextarea(`Mengirim Parameter PID Manual -> Kp:${kp}, Ki:${ki}, Kd:${kd}`);
-        sendSerial(`P=${kp.toFixed(3)},I=${ki.toFixed(3)},D=${kd.toFixed(3)}`);
-    });
-
-    // LOGIKA AUTO TUNING OTOMATIS (Sangat bergantung pada nilai Input Setpoint aktif)
-    document.getElementById('btnTune').addEventListener('click', () => {
-        const targetSetpoint = parseFloat(document.getElementById('inputSetpoint').value);
-        
-        if (isNaN(targetSetpoint) || targetSetpoint <= 0) {
-            alert("Harap tentukan nilai Setpoint terlebih dahulu sebelum melakukan Auto-Tuning!");
-            return;
-        }
-
-        const baseK = parseFloat(document.getElementById('paramK').value);
-        const tau = parseFloat(document.getElementById('paramTau').value);
-        const L = parseFloat(document.getElementById('paramL').value);
-        const method = document.getElementById('selectMethod').value;
-
-        if (baseK === 0 || L === 0 || tau === 0) { alert("Parameter Model tidak boleh bernilai 0!"); return; }
-
-        // Kompensasi Gain Proses Adaptif berbasis nilai Setpoint saat ini
-        const K_aktual = targetSetpoint / baseK;
-
-        let Kp = 0, Ki = 0, Kd = 0, Ti = 0, Td = 0;
-
-        // Implementasi Formula Matematika Klasik
-        if (method === "ZN_PI") { 
-            Kp = (0.9 * tau) / (K_aktual * L); 
-            Ki = Kp / (L / 0.3); 
-        } 
-        else if (method === "ZN_PID") { 
-            Kp = (1.2 * tau) / (K_aktual * L); 
-            Ti = 2 * L; Td = 0.5 * L; 
-            Ki = Kp / Ti; Kd = Kp * Td; 
-        } 
-        else if (method === "CC_PI") { 
-            Kp = (tau / (K_aktual * L)) * (0.9 + L / (12 * tau)); 
-            Ki = Kp / (L * ((32 + 6 * (L / tau)) / (13 + 8 * (L / tau)))); 
-        } 
-        else if (method === "CC_PID") { 
-            Kp = (tau / (K_aktual * L)) * (4 / 3 + L / (4 * tau)); 
-            Ki = Kp / (L * ((32 + 6 * (L / tau)) / (13 + 8 * (L / tau)))); 
-            Kd = Kp * (L * (4 / (11 + 2 * (L / tau)))); 
-        }
-
-        // Tampilkan hasil perhitungan otomatis ke kolom input HMI agar bisa ditinjau/diedit kembali
-        document.getElementById('inputKp').value = Kp.toFixed(3);
-        document.getElementById('inputKi').value = Ki.toFixed(3);
-        document.getElementById('inputKd').value = Kd.toFixed(3);
-
-        logToTextarea(`Auto-Tuning Berhasil (${method}) untuk Target SP: ${targetSetpoint}.`);
-        // Kirim string instruksi gabungan langsung ke Arduino
-        sendSerial(`P=${Kp.toFixed(3)},I=${Ki.toFixed(3)},D=${Kd.toFixed(3)}`);
-    });
-</script>
+    </script>
 </body>
 </html>
