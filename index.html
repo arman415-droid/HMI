@@ -171,7 +171,7 @@
             text-align: center;
         }
 
-        /* Gaya Khusus Kolom Input Interaktif */
+        /* Gaya Kolom Input Kp, Ki, Kd */
         .param-input-box {
             width: 100%;
             background-color: #1e2023;
@@ -284,7 +284,7 @@
     <div class="status-indicators">
         <span>Simulasi Motor (Tanpa Hardware) <div class="status-light" style="background-color:var(--accent-green); display:inline-block; margin-left:5px;"></div></span>
         <span>Simulasi Internal <div class="status-light" style="background-color:#f1c40f; display:inline-block; margin-left:5px;"></div></span>
-        <button id="btnConnect" class="connect-btn">Hubungkan Serial</button>
+        <button id="btnConnect" class="connect-btn">Hubungkan Serial (115200)</button>
     </div>
 </header>
 
@@ -362,9 +362,9 @@
                 
                 <label>Model Identifikasi (FOPDT)</label>
                 <div class="grid-3" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:5px;">
-                    <input type="number" id="paramK" placeholder="K" value="1.0">
-                    <input type="number" id="paramTau" placeholder="T" value="1.0">
-                    <input type="number" id="paramL" placeholder="L" value="0.2">
+                    <input type="number" id="paramK" placeholder="K (Process Gain)" value="1.0">
+                    <input type="number" id="paramTau" placeholder="T (Time Const)" value="1.0">
+                    <input type="number" id="paramL" placeholder="L (Dead Time)" value="0.2">
                 </div>
             </div>
         </div>
@@ -441,19 +441,20 @@
     const instantPV = document.getElementById('instantPV');
     const instantPWM = document.getElementById('instantPWM');
 
-    // Koneksi Serial via Web Serial API
+    // Koneksi Serial VIA BAUDRATE 115200 (BARU)
     btnConnect.addEventListener('click', async () => {
         if ('serial' in navigator) {
             try {
                 port = await navigator.serial.requestPort();
-                await port.open({ baudRate: 9600 });
-                btnConnect.textContent = "Terhubung";
+                // REVISI: Baud rate diubah menjadi 115200
+                await port.open({ baudRate: 115200 }); 
+                btnConnect.textContent = "Terhubung (115200)";
                 btnConnect.style.backgroundColor = "#2ecc71";
                 const textEncoder = new TextEncoderStream();
                 textEncoder.readable.pipeTo(port.writable);
                 writer = textEncoder.writable.getWriter();
                 readSerialData();
-                logToTextarea("System READY. Kp, Ki, Kd diatur ke 0.");
+                logToTextarea("System READY pada kecepatan 115200 bps.");
             } catch (err) { alert("Gagal membuka port serial: " + err); }
         } else { alert("Browser tidak mendukung Web Serial API!"); }
     });
@@ -515,10 +516,10 @@
     document.getElementById('btnSendSetpoint').addEventListener('click', () => {
         const spVal = document.getElementById('inputSetpoint').value;
         sendSerial("S=" + spVal);
-        logToTextarea(`Setpoint baru: ${spVal}`);
+        logToTextarea(`Setpoint baru diterapkan: ${spVal}`);
     });
 
-    // Event Kirim Parameter PID (Manual dari Isian Praktikan)
+    // Event Kirim Parameter PID (Manual dari Praktikan)
     document.getElementById('btnSendPID').addEventListener('click', () => {
         const kp = parseFloat(document.getElementById('inputKp').value);
         const ki = parseFloat(document.getElementById('inputKi').value);
@@ -533,29 +534,61 @@
         sendSerial(`P=${kp.toFixed(3)},I=${ki.toFixed(3)},D=${kd.toFixed(3)}`);
     });
 
-    // Event Kalkulasi Otomatis (Auto Tuning)
+    // REVISI: Event Auto Tuning dinamis berbasis nilai SET POINT aktif
     document.getElementById('btnTune').addEventListener('click', () => {
-        logToTextarea("Memulai kalkulasi parameter otomatis...");
-        const K = parseFloat(document.getElementById('paramK').value);
+        const currentSetpoint = parseFloat(document.getElementById('inputSetpoint').value);
+        
+        if (isNaN(currentSetpoint) || currentSetpoint <= 0) {
+            alert("Harap tentukan nilai Setpoint positif yang valid terlebih dahulu sebagai basis magnitudo tuning!");
+            return;
+        }
+
+        const modelK = parseFloat(document.getElementById('paramK').value);
         const tau = parseFloat(document.getElementById('paramTau').value);
         const L = parseFloat(document.getElementById('paramL').value);
         const method = document.getElementById('selectMethod').value;
 
-        if (K === 0 || L === 0) { alert("Nilai K dan L tidak boleh nol!"); return; }
+        if (modelK === 0 || L === 0 || tau === 0) { 
+            alert("Nilai parameter model FOPDT (K, T, L) tidak boleh nol!"); 
+            return; 
+        }
+
+        // LOGIKA BARU: Menyesuaikan Process Gain (K) aktual berdasarkan rasio target Setpoint
+        // Mengasumsikan respons step dievaluasi sebanding dengan perubahan magnitudo Setpoint saat ini
+        const K_aktual = currentSetpoint / modelK; 
+
+        logToTextarea(`Memulai tuning adaptif. Basis Setpoint: ${currentSetpoint}, Gain Terkompensasi: ${K_aktual.toFixed(3)}`);
 
         let Kp = 0, Ki = 0, Kd = 0, Ti = 0, Td = 0;
 
-        if (method === "ZN_PI") { Kp = (0.9 * tau) / (K * L); Ki = Kp / (L / 0.3); } 
-        else if (method === "ZN_PID") { Kp = (1.2 * tau) / (K * L); Ti = 2 * L; Td = 0.5 * L; Ki = Kp / Ti; Kd = Kp * Td; } 
-        else if (method === "CC_PI") { Kp = (tau/(K*L))*(0.9+L/(12*tau)); Ki = Kp / (L*((30+3*(L/tau))/(9+20*(L/tau)))); } 
-        else if (method === "CC_PID") { Kp = (tau/(K*L))*(4/3+L/(4*tau)); Ki = Kp / (L*((32+6*(L/tau))/(13+8*(L/tau)))); Kd = Kp * (L*(4/(11+2*(L/tau)))); }
+        // Rumus kendali dengan K_aktual dinamis
+        if (method === "ZN_PI") { 
+            Kp = (0.9 * tau) / (K_aktual * L); 
+            Ki = Kp / (L / 0.3); 
+        } 
+        else if (method === "ZN_PID") { 
+            Kp = (1.2 * tau) / (K_aktual * L); 
+            Ti = 2 * L; 
+            Td = 0.5 * L; 
+            Ki = Kp / Ti; 
+            Kd = Kp * Td; 
+        } 
+        else if (method === "CC_PI") { 
+            Kp = (tau / (K_aktual * L)) * (0.9 + L / (12 * tau)); 
+            Ki = Kp / (L * ((30 + 3 * (L / tau)) / (9 + 20 * (L / tau)))); 
+        } 
+        else if (method === "CC_PID") { 
+            Kp = (tau / (K_aktual * L)) * (4 / 3 + L / (4 * tau)); 
+            Ki = Kp / (L * ((32 + 6 * (L / tau)) / (13 + 8 * (L / tau)))); 
+            Kd = Kp * (L * (4 / (11 + 2 * (L / tau)))); 
+        }
 
-        // Memperbarui kotak input interaktif dengan hasil hitungan rumus otomatis
+        // Memperbarui kotak input interaktif dengan hasil hitungan adaptif
         document.getElementById('inputKp').value = Kp.toFixed(3);
         document.getElementById('inputKi').value = Ki.toFixed(3);
         document.getElementById('inputKd').value = Kd.toFixed(3);
 
-        logToTextarea(`Auto-Tuning Selesai (${method}). Nilai diperbarui di atas.`);
+        logToTextarea(`Auto-Tuning Selesai (${method}) untuk SP=${currentSetpoint}. Nilai diperbarui.`);
         sendSerial(`P=${Kp.toFixed(3)},I=${Ki.toFixed(3)},D=${Kd.toFixed(3)}`);
     });
 </script>
