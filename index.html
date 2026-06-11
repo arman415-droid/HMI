@@ -28,7 +28,6 @@
             height: 100vh;
         }
 
-        /* --- TOP BAR --- */
         header {
             background-color: var(--card-bg);
             padding: 10px 20px;
@@ -70,7 +69,6 @@
             cursor: pointer;
         }
 
-        /* --- MAIN CONTAINER --- */
         .main-container {
             display: grid;
             grid-template-columns: 280px 1fr 280px;
@@ -80,7 +78,6 @@
             overflow: hidden;
         }
 
-        /* --- GENERIC CARD STYLE --- */
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -108,7 +105,6 @@
             flex: 1;
         }
 
-        /* --- LEFT SIDEBAR --- */
         .left-sidebar {
             display: flex;
             flex-direction: column;
@@ -171,13 +167,12 @@
             text-align: center;
         }
 
-        /* Gaya Kolom Input Kp, Ki, Kd */
         .param-input-box {
             width: 100%;
             background-color: #1e2023;
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            color: #2ecc71; /* Hijau simulator cerah */
+            color: #2ecc71;
             font-size: 1.1rem;
             font-weight: bold;
             text-align: center;
@@ -198,7 +193,6 @@
             font-size: 0.8rem;
         }
 
-        /* --- CENTER AREA --- */
         .center-area {
             display: flex;
             flex-direction: column;
@@ -240,7 +234,6 @@
             color: var(--text-color);
         }
 
-        /* --- RIGHT SIDEBAR --- */
         .right-sidebar {
             display: flex;
             flex-direction: column;
@@ -274,7 +267,6 @@
             box-sizing: border-box;
             resize: none;
         }
-
     </style>
 </head>
 <body>
@@ -289,11 +281,9 @@
 </header>
 
 <div class="main-container">
-    
     <div class="left-sidebar">
-        
         <div class="card">
-            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/settings.png"/> Panel Operasi</h2></div>
+            <div class="card-header"><h2>Panel Operasi</h2></div>
             <div class="card-content">
                 <div class="form-group">
                     <label>Mode Kendali</label>
@@ -318,7 +308,7 @@
         </div>
 
         <div class="card">
-            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/mind-map.png"/> Robust PID</h2></div>
+            <div class="card-header"><h2>Robust PID</h2></div>
             <div class="card-content">
                 <div class="param-display-grid">
                     <div class="value-item">
@@ -334,51 +324,40 @@
                         <input type="number" id="inputKd" class="param-input-box" value="0" step="0.001">
                     </div>
                 </div>
-                
                 <button id="btnSendPID" class="btn btn-blue" style="width:100%; margin-top:12px;">Kirim Parameter PID</button>
-                
-                <div class="toggle-group">
-                    <label><input type="checkbox" checked> Anti-Integral Windup</label>
-                    <label><input type="checkbox" checked> Anti-Derivative Kick</label>
-                    <label><input type="checkbox"> Trajectory Planning (S-Curve)</label>
-                </div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/automatic.png"/> Auto Tuning</h2></div>
+            <div class="card-header"><h2>Auto Tuning Otomatis</h2></div>
             <div class="card-content">
                 <div class="form-group">
-                    <label>Mode</label>
+                    <label>Metode Kalkulasi</label>
                     <select id="selectMethod">
-                        <option value="ZN_PID">ZN Mode 1 (Open Loop Step)</option>
+                        <option value="ZN_PID">Ziegler-Nichols (PID)</option>
                         <option value="ZN_PI">Ziegler-Nichols (PI)</option>
                         <option value="CC_PID">Cohen-Coon (PID)</option>
                         <option value="CC_PI">Cohen-Coon (PI)</option>
                     </select>
                 </div>
-                
                 <button id="btnTune" class="btn btn-green" style="width:100%; margin-bottom:10px;">Hitung Otomatis</button>
-                
-                <label>Model Identifikasi (FOPDT)</label>
-                <div class="grid-3" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:5px;">
-                    <input type="number" id="paramK" placeholder="K (Process Gain)" value="1.0">
-                    <input type="number" id="paramTau" placeholder="T (Time Const)" value="1.0">
-                    <input type="number" id="paramL" placeholder="L (Dead Time)" value="0.2">
+                <label>Karakteristik Model (FOPDT)</label>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:5px;">
+                    <input type="number" id="paramK" placeholder="K" value="1.2">
+                    <input type="number" id="paramTau" placeholder="T (s)" value="0.8">
+                    <input type="number" id="paramL" placeholder="L (s)" value="0.15">
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="center-area">
         <div class="card chart-card">
-            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/line-chart.png"/> Real-Time Response</h2></div>
+            <div class="card-header"><h2>Real-Time Response</h2></div>
             <div class="chart-container">
                 <canvas id="realtimeChart"></canvas>
             </div>
         </div>
-        
         <div class="value-bar">
             <div class="value-item"><h3>Setpoint (SP)</h3><p id="instantSP">0.0</p></div>
             <div class="value-item"><h3>Process Variable (PV)</h3><p id="instantPV">0.0</p></div>
@@ -387,49 +366,35 @@
     </div>
 
     <div class="right-sidebar">
-        
-        <div class="card">
-            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/checked.png"/> Performance Matrix</h2></div>
-            <div class="card-content">
-                <div class="metric-item"><span class="metric-label">Overshoot (Mp)</span><span class="metric-value">---</span></div>
-                <div class="metric-item"><span class="metric-label">Rise Time (tr)</span><span class="metric-value">---</span></div>
-                <div class="metric-item"><span class="metric-label">Settling Time (ts)</span><span class="metric-value">---</span></div>
-                <div class="metric-item"><span class="metric-label">Steady State Error (Ess)</span><span class="metric-value">---</span></div>
-            </div>
-        </div>
-
         <div class="card" style="flex:1;">
-            <div class="card-header"><h2><img src="https://img.icons8.com/windows/16/e0e0e0/log.png"/> HIL -> MCU State</h2></div>
+            <div class="card-header"><h2>HIL -> MCU State (Data Serial)</h2></div>
             <div class="card-content" style="padding:0;">
                 <textarea id="serialLog" class="log-textarea" readonly></textarea>
             </div>
         </div>
-        
     </div>
-
 </div>
 
 <script>
     let port, writer, reader, keepReading = true;
 
-    // Chart.js Setup
+    // Inisialisasi Chart.js
     const ctx = document.getElementById('realtimeChart').getContext('2d');
-    const maxDataPoints = 200;
+    const maxDataPoints = 150;
     const realtimeChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: Array(maxDataPoints).fill(''),
             datasets: [
-                { label: 'Set Point (SP)', data: Array(maxDataPoints).fill(null), borderColor: '#e74c3c', borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'Process Variable (PV)', data: Array(maxDataPoints).fill(null), borderColor: '#2ecc71', borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0 }
+                { label: 'Set Point (SP)', data: Array(maxDataPoints).fill(null), borderColor: '#e74c3c', borderWidth: 2, fill: false, pointRadius: 0 },
+                { label: 'Process Variable (PV)', data: Array(maxDataPoints).fill(null), borderColor: '#2ecc71', borderWidth: 2, fill: false, pointRadius: 0 }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false, animation: false,
-            elements: { line: { tension: 0 } },
             scales: {
                 y: { beginAtZero: true, grid: { color: '#3f4347' }, ticks: { color: '#a0a0a0' } },
-                x: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                x: { grid: { display: false } }
             },
             plugins: { legend: { labels: { color: '#e0e0e0' } } }
         }
@@ -441,20 +406,19 @@
     const instantPV = document.getElementById('instantPV');
     const instantPWM = document.getElementById('instantPWM');
 
-    // Koneksi Serial VIA BAUDRATE 115200 (BARU)
+    // Menghubungkan Serial dengan Kecepatan Baud Rate 115200 bps
     btnConnect.addEventListener('click', async () => {
         if ('serial' in navigator) {
             try {
                 port = await navigator.serial.requestPort();
-                // REVISI: Baud rate diubah menjadi 115200
-                await port.open({ baudRate: 115200 }); 
+                await port.open({ baudRate: 115200 }); // BERUBAH KE 115200
                 btnConnect.textContent = "Terhubung (115200)";
                 btnConnect.style.backgroundColor = "#2ecc71";
                 const textEncoder = new TextEncoderStream();
                 textEncoder.readable.pipeTo(port.writable);
                 writer = textEncoder.writable.getWriter();
                 readSerialData();
-                logToTextarea("System READY pada kecepatan 115200 bps.");
+                logToTextarea("Koneksi Berhasil. Baudrate diset ke 115200.");
             } catch (err) { alert("Gagal membuka port serial: " + err); }
         } else { alert("Browser tidak mendukung Web Serial API!"); }
     });
@@ -488,94 +452,79 @@
         const dataArr = line.split(",");
         if (dataArr.length >= 4) {
             const sp = parseFloat(dataArr[0]);
-            const raw = parseFloat(dataArr[1]);
-            const filtered = parseFloat(dataArr[2]);
+            const filteredPV = parseFloat(dataArr[2]);
             const pwm = parseInt(dataArr[3]);
 
-            if (!isNaN(sp) && !isNaN(raw) && !isNaN(filtered)) {
+            if (!isNaN(sp) && !isNaN(filteredPV)) {
                 realtimeChart.data.datasets[0].data.push(sp);
                 realtimeChart.data.datasets[0].data.shift();
-                realtimeChart.data.datasets[1].data.push(filtered);
+                realtimeChart.data.datasets[1].data.push(filteredPV);
                 realtimeChart.data.datasets[1].data.shift();
                 realtimeChart.update();
 
                 instantSP.textContent = sp.toFixed(1);
-                instantPV.textContent = filtered.toFixed(1);
-                const pwmDir = pwm > 0 ? "(FWD)" : (pwm < 0 ? "(REV)" : "(STOP)");
-                instantPWM.textContent = `${pwm} ${pwmDir}`;
+                instantPV.textContent = filteredPV.toFixed(1);
+                instantPWM.textContent = `${pwm} ${pwm >= 0 ? '(FWD)' : '(REV)'}`;
             }
         }
     }
 
     async function sendSerial(command) {
         if (writer) { await writer.write(command + "\n"); } 
-        else { alert("Serial tidak terhubung!"); }
+        else { console.log("Serial belum terhubung."); }
     }
 
-    // Event Setpoint
+    // Mengirim Nilai Setpoint
     document.getElementById('btnSendSetpoint').addEventListener('click', () => {
         const spVal = document.getElementById('inputSetpoint').value;
         sendSerial("S=" + spVal);
-        logToTextarea(`Setpoint baru diterapkan: ${spVal}`);
+        logToTextarea(`Mengirim Setpoint Target: ${spVal}`);
     });
 
-    // Event Kirim Parameter PID (Manual dari Praktikan)
+    // Mengirim Parameter PID Hasil Modifikasi Manual
     document.getElementById('btnSendPID').addEventListener('click', () => {
         const kp = parseFloat(document.getElementById('inputKp').value);
         const ki = parseFloat(document.getElementById('inputKi').value);
         const kd = parseFloat(document.getElementById('inputKd').value);
-
-        if (isNaN(kp) || isNaN(ki) || isNaN(kd)) {
-            alert("Harap masukkan parameter PID berupa angka yang valid!");
-            return;
-        }
-
-        logToTextarea(`Mengirim PID -> Kp: ${kp}, Ki: ${ki}, Kd: ${kd}`);
+        
+        logToTextarea(`Mengirim Parameter PID Manual -> Kp:${kp}, Ki:${ki}, Kd:${kd}`);
         sendSerial(`P=${kp.toFixed(3)},I=${ki.toFixed(3)},D=${kd.toFixed(3)}`);
     });
 
-    // REVISI: Event Auto Tuning dinamis berbasis nilai SET POINT aktif
+    // LOGIKA AUTO TUNING OTOMATIS (Sangat bergantung pada nilai Input Setpoint aktif)
     document.getElementById('btnTune').addEventListener('click', () => {
-        const currentSetpoint = parseFloat(document.getElementById('inputSetpoint').value);
+        const targetSetpoint = parseFloat(document.getElementById('inputSetpoint').value);
         
-        if (isNaN(currentSetpoint) || currentSetpoint <= 0) {
-            alert("Harap tentukan nilai Setpoint positif yang valid terlebih dahulu sebagai basis magnitudo tuning!");
+        if (isNaN(targetSetpoint) || targetSetpoint <= 0) {
+            alert("Harap tentukan nilai Setpoint terlebih dahulu sebelum melakukan Auto-Tuning!");
             return;
         }
 
-        const modelK = parseFloat(document.getElementById('paramK').value);
+        const baseK = parseFloat(document.getElementById('paramK').value);
         const tau = parseFloat(document.getElementById('paramTau').value);
         const L = parseFloat(document.getElementById('paramL').value);
         const method = document.getElementById('selectMethod').value;
 
-        if (modelK === 0 || L === 0 || tau === 0) { 
-            alert("Nilai parameter model FOPDT (K, T, L) tidak boleh nol!"); 
-            return; 
-        }
+        if (baseK === 0 || L === 0 || tau === 0) { alert("Parameter Model tidak boleh bernilai 0!"); return; }
 
-        // LOGIKA BARU: Menyesuaikan Process Gain (K) aktual berdasarkan rasio target Setpoint
-        // Mengasumsikan respons step dievaluasi sebanding dengan perubahan magnitudo Setpoint saat ini
-        const K_aktual = currentSetpoint / modelK; 
-
-        logToTextarea(`Memulai tuning adaptif. Basis Setpoint: ${currentSetpoint}, Gain Terkompensasi: ${K_aktual.toFixed(3)}`);
+        // Kompensasi Gain Proses Adaptif berbasis nilai Setpoint saat ini
+        const K_aktual = targetSetpoint / baseK;
 
         let Kp = 0, Ki = 0, Kd = 0, Ti = 0, Td = 0;
 
-        // Rumus kendali dengan K_aktual dinamis
+        // Implementasi Formula Matematika Klasik
         if (method === "ZN_PI") { 
             Kp = (0.9 * tau) / (K_aktual * L); 
             Ki = Kp / (L / 0.3); 
         } 
         else if (method === "ZN_PID") { 
             Kp = (1.2 * tau) / (K_aktual * L); 
-            Ti = 2 * L; 
-            Td = 0.5 * L; 
-            Ki = Kp / Ti; 
-            Kd = Kp * Td; 
+            Ti = 2 * L; Td = 0.5 * L; 
+            Ki = Kp / Ti; Kd = Kp * Td; 
         } 
         else if (method === "CC_PI") { 
             Kp = (tau / (K_aktual * L)) * (0.9 + L / (12 * tau)); 
-            Ki = Kp / (L * ((30 + 3 * (L / tau)) / (9 + 20 * (L / tau)))); 
+            Ki = Kp / (L * ((32 + 6 * (L / tau)) / (13 + 8 * (L / tau)))); 
         } 
         else if (method === "CC_PID") { 
             Kp = (tau / (K_aktual * L)) * (4 / 3 + L / (4 * tau)); 
@@ -583,15 +532,15 @@
             Kd = Kp * (L * (4 / (11 + 2 * (L / tau)))); 
         }
 
-        // Memperbarui kotak input interaktif dengan hasil hitungan adaptif
+        // Tampilkan hasil perhitungan otomatis ke kolom input HMI agar bisa ditinjau/diedit kembali
         document.getElementById('inputKp').value = Kp.toFixed(3);
         document.getElementById('inputKi').value = Ki.toFixed(3);
         document.getElementById('inputKd').value = Kd.toFixed(3);
 
-        logToTextarea(`Auto-Tuning Selesai (${method}) untuk SP=${currentSetpoint}. Nilai diperbarui.`);
+        logToTextarea(`Auto-Tuning Berhasil (${method}) untuk Target SP: ${targetSetpoint}.`);
+        // Kirim string instruksi gabungan langsung ke Arduino
         sendSerial(`P=${Kp.toFixed(3)},I=${Ki.toFixed(3)},D=${Kd.toFixed(3)}`);
     });
 </script>
-
 </body>
 </html>
